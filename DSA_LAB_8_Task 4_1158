@@ -1,0 +1,8 @@
+
+ Task 4	 A hospital management system needs to maintain a list of patients waiting in line for consultation. Patients arrive at different times and may leave the queue if they cancel their appointment. Using the concept of a doubly linked list as an Abstract Data Type (ADT), design and implement a system that supports the following operations:
+
+•Add a new patient to the end of the queue
+•Remove a patient from the queue if they cancel
+•Display the current list of patients in order
+•Count how many patients are currently in the queue
+Write a program to simulate this scenario using a singly linked list and demonstrate each operation with sample data.
