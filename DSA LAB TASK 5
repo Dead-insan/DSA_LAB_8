@@ -1,0 +1,188 @@
+//A university library allows students to reserve books that are currently checked out. Each book maintains a waiting list of students who wish to borrow it. Students can join the queue, cancel their reservation, or update their priority based on academic urgency (e.g., research, assignment, casual reading). The library must handle multiple reservation queues, one for each book, and ensure students are served fairly and efficiently.
+
+//Using a doubly linked list as an Abstract Data Type (ADT), design and implement a system that supports the following operations for each book's reservation queue:
+
+//Add a new student to the reservation list, with optional priority tagging
+//Remove a student from the reservation list if they cancel the request
+//Update a student's priority, moving them up the queue accordingly
+//Display the current reservation list for a specific book
+//Count how many students are currently in the reservation list
+//Automatically remove the student at the front of the queue once the book is returned
+
+//Write a program to simulate this scenario using singly linked lists and demonstrate each operation with sample data for at least two books and multiple students.
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+struct Node {
+    string studentID;
+    int priority;
+    Node* next;
+    Node* prev;
+    Node(string id, int p = 1) : studentID(id), priority(p), next(nullptr), prev(nullptr) {}
+};
+
+class ReservationQueue {
+private:
+    Node* head;
+    Node* tail;
+    int count;
+    string bookID;
+
+public:
+    ReservationQueue(string id) : head(nullptr), tail(nullptr), count(0), bookID(id) {}
+
+    void addStudent(string studentID, int priority) {
+        if (priority < 1 || priority > 3) {
+            cout << "Invalid priority for " << studentID << ". Must be 1 (casual), 2 (assignment), or 3 (research)." << endl;
+            return;
+        }
+        Node* newNode = new Node(studentID, priority);
+        count++;
+
+        if (!head) {
+            head = tail = newNode;
+            cout << "Added " << studentID << " to reservation queue for book " << bookID << endl;
+            return;
+        }
+
+        Node* current = head;
+        while (current && current->priority >= priority) {
+            current = current->next;
+        }
+
+        if (!current) {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        } else if (current == head) {
+            newNode->next = head;
+            head->prev = newNode;
+            head = newNode;
+        } else {
+            newNode->next = current;
+            newNode->prev = current->prev;
+            current->prev->next = newNode;
+            current->prev = newNode;
+        }
+        cout << "Added " << studentID << " to reservation queue for book " << bookID << endl;
+    }
+
+    bool removeStudent(string studentID) {
+        Node* current = head;
+        while (current) {
+            if (current->studentID == studentID) {
+                if (current == head) {
+                    head = current->next;
+                    if (head) head->prev = nullptr;
+                    else tail = nullptr;
+                } else if (current == tail) {
+                    tail = current->prev;
+                    tail->next = nullptr;
+                } else {
+                    current->prev->next = current->next;
+                    current->next->prev = current->prev;
+                }
+                delete current;
+                count--;
+                cout << "Cancelled reservation for " << studentID << " for book " << bookID << endl;
+                return true;
+            }
+            current = current->next;
+        }
+        cout << "Student " << studentID << " not found in reservation queue for book " << bookID << endl;
+        return false;
+    }
+
+    bool updatePriority(string studentID, int newPriority) {
+        if (newPriority < 1 || newPriority > 3) {
+            cout << "Invalid priority for " << studentID << ". Must be 1 (casual), 2 (assignment), or 3 (research)." << endl;
+            return false;
+        }
+        if (removeStudent(studentID)) {
+            addStudent(studentID, newPriority);
+            cout << "Updated priority for " << studentID << " for book " << bookID << endl;
+            return true;
+        }
+        return false;
+    }
+
+    void display() {
+        cout << "Reservations for book " << bookID << ":" << endl;
+        Node* current = head;
+        if (!current) {
+            cout << "Reservation list is empty." << endl;
+            return;
+        }
+        cout << "Reservation list:" << endl;
+        while (current) {
+            cout << "Student ID: " << current->studentID << ", Priority: ";
+            switch (current->priority) {
+                case 3: cout << "research"; break;
+                case 2: cout << "assignment"; break;
+                case 1: cout << "casual"; break;
+                default: cout << "unknown"; break;
+            }
+            cout << endl;
+            current = current->next;
+        }
+    }
+
+    int getCount() {
+        return count;
+    }
+
+    void bookReturned() {
+        if (!head) {
+            cout << "No reservations for book " << bookID << endl;
+            return;
+        }
+        Node* temp = head;
+        string studentID = temp->studentID;
+        head = head->next;
+        if (head) head->prev = nullptr;
+        else tail = nullptr;
+        delete temp;
+        count--;
+        cout << "Book " << bookID << " assigned to " << studentID << endl;
+    }
+
+    ~ReservationQueue() {
+        while (head) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+};
+
+int main() {
+    ReservationQueue bookQueue("Book1");
+
+    cout << "\n=== Book 1 Operations ===\n";
+    bookQueue.addStudent("S001", 1);
+    bookQueue.addStudent("S002", 2);
+    bookQueue.addStudent("S003", 3);
+    bookQueue.display();
+    cout << "Number of reservations for Book1: " << bookQueue.getCount() << endl;
+
+    bookQueue.updatePriority("S001", 3);
+    bookQueue.display();
+
+    bookQueue.removeStudent("S002");
+    bookQueue.display();
+
+    bookQueue.bookReturned();
+    bookQueue.display();
+
+    bookQueue.bookReturned();
+    bookQueue.bookReturned();
+    bookQueue.display();
+
+    bookQueue.addStudent("S004", 4);
+    bookQueue.updatePriority("S003", 0);
+
+    return 0;
+}
+
